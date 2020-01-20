@@ -12,15 +12,12 @@ import {
   View,
   Text,
 } from 'react-native';
+import HomeView from './src/components/Home/HomeView';
 
 const App: () => React$Node = () => {
   return (
-    <SafeAreaView>
-      <View>
-        <Text>
-          Hello I am a DEVELOPER!
-        </Text>
-      </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      <HomeView />
     </SafeAreaView>
   );
 };
