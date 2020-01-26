@@ -1,13 +1,24 @@
 const i18n = {
+    TIME_FORMAT: 'HH:mm:ss',
+    DATE_FORMAT: 'DD MMM YYYY',
+    CANSEL: 'Cancel',
+    SAVE: 'Save',
     HOME: {
         WELCOME_HEADER: 'Good Morning!',
         FINISH_BTN_CAPTION: 'finish',
+    },
+    FINISH: {
+        MAIN_HEADER: 'You just spent',
+        ACTIVITY_NAME_LABEL: 'Activity name',
+
     },
     STOP_WATCH: {
         START: 'START',
         PAUSE: 'PAUSE'
     },
-    TIME_FORMAT: 'HH:mm:ss',
+    HISTORY: {
+        SAVE_ACTIVITIES_HEADER: 'Saved Activities',
+    }
 }
 
 export default i18n;

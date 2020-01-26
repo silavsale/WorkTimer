@@ -4,6 +4,7 @@ import HomeViewStyles from './HoveViewStyles';
 import i18n from '../../i18n/i18n';
 import StopWatchButton from '../StopwatchButton/StopWatchButton';
 import AsyncStorage from '@react-native-community/async-storage';
+import { APP_STATE_CHANGED_TIMESTAMP_STORAGE_KEY, IS_PAUSED_STORAGE_KEY, TIME_STORAGE_KEY } from '../../config/consts';
 
 class HomeView extends React.Component {
     constructor(props) {
@@ -14,23 +15,22 @@ class HomeView extends React.Component {
         this.startTimer = this.startTimer.bind(this);
         this.pauseTimer = this.pauseTimer.bind(this);
         this.handleAppStateChange = this.handleAppStateChange.bind(this);
+        this.handleAppStateChange('initial');
     }
 
     async handleAppStateChange(nextAppState) {
-        console.log('nextAppState', nextAppState);
         const now = new Date().getTime();
         const { time, paused } = this.state;
-        const readTime = parseInt(await AsyncStorage.getItem('@time'));
-        const readStateChangeTimestamp = parseInt(await AsyncStorage.getItem(
-            '@appStateChangedTimeStamp'
-        ));
+        const readTime = parseInt(await AsyncStorage.getItem(TIME_STORAGE_KEY));
+        const readStateChangeTimestamp = parseInt(
+            await AsyncStorage.getItem(APP_STATE_CHANGED_TIMESTAMP_STORAGE_KEY)
+        );
 
-        console.log('stored date', readStateChangeTimestamp, readTime);
         const timeDifference = now - readStateChangeTimestamp;
         const newTime = readTime + timeDifference;
 
-        if (nextAppState === 'active') {
-            const isPaused = await AsyncStorage.getItem('@isPaused');
+        if (isNaN(readTime) && (nextAppState === 'active' || nextAppState === 'initial')) {
+            const isPaused = await AsyncStorage.getItem(IS_PAUSED_STORAGE_KEY);
             const wasPaused = isPaused && isPaused === 'true';
             let newState = {
                 paused: wasPaused,
@@ -41,9 +41,9 @@ class HomeView extends React.Component {
             }
             this.setState(newState, this.startTimer)
         } else {
-            await AsyncStorage.setItem('@isPaused', paused === true ? 'true' : 'false');
-            await AsyncStorage.setItem('@time', JSON.stringify(time));
-            await AsyncStorage.setItem('@appStateChangedTimeStamp', JSON.stringify(now));
+            await AsyncStorage.setItem(IS_PAUSED_STORAGE_KEY, paused === true ? 'true' : 'false');
+            await AsyncStorage.setItem(TIME_STORAGE_KEY, time.toString());
+            await AsyncStorage.setItem(APP_STATE_CHANGED_TIMESTAMP_STORAGE_KEY, now.toString());
         }
     }
 
@@ -91,6 +91,7 @@ class HomeView extends React.Component {
                             time: 0,
                         });
                         console.log('FINISH COUNTING and NAVIGATE TO THE NEXT PAGE', time);
+                        this.props.navigation.navigate('Finish', { timeSpent: time });
                     }}>
                     <Text style={HomeViewStyles.finishButtonText}>{i18n.HOME.FINISH_BTN_CAPTION}</Text>
                 </TouchableOpacity>
