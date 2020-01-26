@@ -11,6 +11,18 @@ const HomeViewStyles = StyleSheet.create({
         fontSize: 40,
         color: '#000'
     },
+
+    finishButtonText: {
+        fontSize: 60,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        color: '#EA4C4C',
+    },
+
+    buttonsContrainer: {
+        alignItems: 'center',
+        justifyContent: 'space-between'
+    }
 });
 
 export default HomeViewStyles;

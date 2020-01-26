@@ -19,25 +19,32 @@ class HomeView extends React.Component {
     async handleAppStateChange(nextAppState) {
         console.log('nextAppState', nextAppState);
         const now = new Date().getTime();
-        console.log('this', this);
-        const { time } = this.state;
-        const readTime = await AsyncStorage.getItem('@time');
-        const readStateChangeTimestamp = await AsyncStorage.getItem('@appStateChangedTimeStamp');
+        const { time, paused } = this.state;
+        const readTime = parseInt(await AsyncStorage.getItem('@time'));
+        const readStateChangeTimestamp = parseInt(await AsyncStorage.getItem(
+            '@appStateChangedTimeStamp'
+        ));
 
         console.log('stored date', readStateChangeTimestamp, readTime);
-        const timeDifference = now - parseInt(readStateChangeTimestamp);
-        const newTime = parseInt(readTime) + timeDifference;
-        console.log('newTime', newTime);
-        if (nextAppState === 'active') {
-            this.setState({
-                time: newTime,
-            },
-                this.startTimer,
-            )
-        }
+        const timeDifference = now - readStateChangeTimestamp;
+        const newTime = readTime + timeDifference;
 
-        await AsyncStorage.setItem('@time', JSON.stringify(time));
-        await AsyncStorage.setItem('@appStateChangedTimeStamp', JSON.stringify(now));
+        if (nextAppState === 'active') {
+            const isPaused = await AsyncStorage.getItem('@isPaused');
+            const wasPaused = isPaused && isPaused === 'true';
+            let newState = {
+                paused: wasPaused,
+                time: readTime,
+            };
+            if (!wasPaused) {
+                newState.time = newTime;
+            }
+            this.setState(newState, this.startTimer)
+        } else {
+            await AsyncStorage.setItem('@isPaused', paused === true ? 'true' : 'false');
+            await AsyncStorage.setItem('@time', JSON.stringify(time));
+            await AsyncStorage.setItem('@appStateChangedTimeStamp', JSON.stringify(now));
+        }
     }
 
     componentDidMount() {
@@ -49,34 +56,63 @@ class HomeView extends React.Component {
     }
 
     startTimer() {
-        setInterval(() => {
+        this.clearTimer();
+        this.timeIntervalId = setInterval(() => {
             const { time, paused } = this.state;
             if (!paused) {
                 this.setState({
                     time: time + 1000
-                })
+                });
             }
-        })
+        }, 1000);
+    }
+
+    clearTimer() {
+        if (this.timeIntervalId) {
+            clearInterval(this.timeIntervalId);
+        }
     }
 
     pauseTimer() {
         const { paused } = this.state;
-        this.setState({ paused: !paused })
+        this.setState({
+            paused: !paused
+        });
+    }
+
+    renderFinishButton() {
+        const { time, paused } = this.state;
+        if (time && !paused) {
+            return (
+                <TouchableOpacity
+                    onPress={() => {
+                        this.clearTimer();
+                        this.setState({
+                            time: 0,
+                        });
+                        console.log('FINISH COUNTING and NAVIGATE TO THE NEXT PAGE', time);
+                    }}>
+                    <Text style={HomeViewStyles.finishButtonText}>{i18n.HOME.FINISH_BTN_CAPTION}</Text>
+                </TouchableOpacity>
+            )
+        }
     }
 
     render() {
-        const { time } = this.state;
+        const { time, paused } = this.state;
         return (
             <View style={[{ flex: 1 }, HomeViewStyles.homeViewContainer]} >
                 <View style={{ flex: 1 }}>
                     <Text style={HomeViewStyles.welcodeHeader}>{i18n.HOME.WELCOME_HEADER}</Text>
                 </View>
-                <View style={{ flex: 2 }} >
+                <View style={[{ flex: 2 }, HomeViewStyles.buttonsContrainer]} >
                     <StopWatchButton
+                        paused={paused}
                         time={time}
                         startOnPressAction={this.startTimer}
                         timerOnPressAction={this.pauseTimer}
                     />
+                    {this.renderFinishButton()}
                 </View>
             </View>
         )
